@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "664013021520",
+    "project_id": "greenmeter-921d4",
+    "storage_bucket": "greenmeter-921d4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:664013021520:android:484c40c05124d64aa58c55",
+        "android_client_info": {
+          "package_name": "com.example.greenmeter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "664013021520-a68pimrr4rb88ccue7dar5gbqa36mbkt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.greenmeter",
+            "certificate_hash": "46de03405f87a6ac36412ca2ad7e013f17a349e4"
+          }
+        },
+        {
+          "client_id": "664013021520-28gt8cmnofsohpsr604b9sck8p03gsfa.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDG-8N9sGN2ApVGA4pdvg-PtBBhvNEUfHU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "664013021520-28gt8cmnofsohpsr604b9sck8p03gsfa.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
