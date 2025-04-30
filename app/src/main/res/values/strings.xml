@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">GreenMeter</string>
+    <string name="sign_up_text"><u>Don\'t have an account? Sign Up</u></string>
+    <string name="log_in_text"><u>Already have an account? Log In</u></string>
+    <string name="forgot_password_text"><u>Forgot your password?</u></string>
 </resources>

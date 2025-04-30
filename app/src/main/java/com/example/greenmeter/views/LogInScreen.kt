@@ -1,5 +1,6 @@
-package com.example.greenmeter
+package com.example.greenmeter.views
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.Button
@@ -14,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
+import com.example.greenmeter.R
+import com.example.greenmeter.backend.Authentification
 
 @Composable
 fun LogInScreen (navController: NavController) {
@@ -37,8 +40,32 @@ fun LogInScreen (navController: NavController) {
                 val LogInButton = view.findViewById<Button>(R.id.LoginButton)
                 val signup = view.findViewById<TextView>(R.id.SignUp)
                 val forgotpassword = view.findViewById<TextView>(R.id.forgot_password)
+                val error = view.findViewById<TextView>(R.id.error)
 
+                signup.setOnClickListener {
+                    Log.d("SignUp", "SignUp clicked")
+                    navController.navigate("signup")
+                }
 
+                LogInButton.setOnClickListener {
+                    Log.d("LogIn", "LogIn clicked")
+                    val emailText = email.text.toString()
+                    val passwordText = password.text.toString()
+                    if (emailText.isNotEmpty() && passwordText.isNotEmpty()) {
+                        Log.d("LogIn", "Email: $emailText, Password: $passwordText")
+                        Authentification().login(emailText, passwordText) { success ->
+                            if (success) {
+                                Log.d("LogIn", "Login successful")
+                                navController.navigate("home")
+                            } else {
+                                Log.d("LogIn", "Login failed")
+                                error.text = "Login failed. Please check your credentials."
+                            }
+                        }
+                    } else {
+                        Log.d("LogIn", "Please fill in all fields")
+                    }
+                }
 
                 view
             },
