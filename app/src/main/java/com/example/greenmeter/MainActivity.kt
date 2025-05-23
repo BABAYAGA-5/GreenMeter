@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.greenmeter.views.LogInScreen
+import com.example.greenmeter.views.ProfileScreen
 import com.example.location.HomeScreen
 import com.example.location.SignUpScreen
 import com.example.location.WelcomeScreen
@@ -42,6 +43,9 @@ class MainActivity : AppCompatActivity() {
                 }
                 composable("home") {
                     HomeScreen(navController)
+                }
+                composable("profile") {
+                    ProfileScreen(navController)
                 }
             }
 

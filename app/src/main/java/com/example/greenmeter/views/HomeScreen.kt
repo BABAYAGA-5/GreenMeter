@@ -56,6 +56,9 @@ fun HomeScreen(navController: NavController) {
                 }
                 val displayName = view.findViewById<TextView>(R.id.displayName)
                 displayName.text = "${Firebase.auth.currentUser?.displayName}"
+                val profileButton = view.findViewById<ImageView>(R.id.profileButton)
+                val homeButton = view.findViewById<ImageView>(R.id.homeButton)
+                val analyticsButton = view.findViewById<ImageView>(R.id.analyticsButton)
                 view
             },
             modifier = Modifier.fillMaxSize()

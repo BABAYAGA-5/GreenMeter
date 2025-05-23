@@ -27,17 +27,20 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
         android:src="@drawable/clouds"
         android:translationX="-150dp"
         android:translationY="-180dp" />
+
     <LinearLayout
-        android:layout_marginTop="100dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="50dp"
         android:orientation="vertical">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingLeft="30dp"
             android:paddingRight="30dp">
+
             <TextView
                 android:id="@+id/greetingText"
                 android:layout_width="wrap_content"
@@ -55,13 +58,14 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                 android:textColor="#444444"
                 android:textSize="16sp" />
         </LinearLayout>
+
         <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
             xmlns:app="http://schemas.android.com/apk/res-auto"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
-            app:cardCornerRadius="16dp"
             app:cardBackgroundColor="@color/card"
+            app:cardCornerRadius="16dp"
             app:cardElevation="4dp">
 
             <LinearLayout
@@ -96,9 +100,9 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                         <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
+                            android:layout_marginTop="4dp"
                             android:gravity="center_vertical"
-                            android:layout_marginTop="4dp">
+                            android:orientation="horizontal">
 
 
                             <TextView
@@ -115,10 +119,10 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                             android:id="@+id/location"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
                             android:text="Jakarta, Indonesia"
                             android:textColor="#666666"
-                            android:textSize="14sp"
-                            android:layout_marginTop="4dp" />
+                            android:textSize="14sp" />
                     </LinearLayout>
 
                     <!-- Right Side: Temperature -->
@@ -136,9 +140,9 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="#DDDDDD"
                     android:layout_marginTop="12dp"
-                    android:layout_marginBottom="12dp" />
+                    android:layout_marginBottom="12dp"
+                    android:background="#DDDDDD" />
 
                 <!-- Weather Details (Humidity, Visibility, Wind) -->
                 <LinearLayout
@@ -151,17 +155,17 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:gravity="center">
+                        android:gravity="center"
+                        android:orientation="vertical">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
                             android:text="97 %"
                             android:textColor="#333333"
                             android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:layout_marginTop="4dp" />
+                            android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -176,17 +180,17 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:gravity="center">
+                        android:gravity="center"
+                        android:orientation="vertical">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
                             android:text="7 km"
                             android:textColor="#333333"
                             android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:layout_marginTop="4dp" />
+                            android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -201,17 +205,17 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:gravity="center">
+                        android:gravity="center"
+                        android:orientation="vertical">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
                             android:text="3 km/h"
                             android:textColor="#333333"
                             android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:layout_marginTop="4dp" />
+                            android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -223,6 +227,7 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -233,10 +238,11 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                 android:layout_height="65dp"
                 android:layout_alignParentBottom="true"
                 android:background="@color/background"
-                android:gravity="center"
-                android:elevation="10dp">
+                android:elevation="10dp"
+                android:gravity="center">
 
                 <androidx.cardview.widget.CardView
+                    android:id="@+id/homeButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="25dp"
@@ -251,6 +257,7 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                 </androidx.cardview.widget.CardView>
 
                 <androidx.cardview.widget.CardView
+                    android:id="@+id/analyticsButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="25dp"
@@ -265,6 +272,7 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                 </androidx.cardview.widget.CardView>
 
                 <androidx.cardview.widget.CardView
+                    android:id="@+id/profileButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="25dp"
