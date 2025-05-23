@@ -71,26 +71,18 @@
                     android:textStyle="bold"
                     android:textColor="#333333" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/device_count_background"
-                    android:text="1"
-                    android:textColor="@color/white"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:padding="6dp"
-                    android:minWidth="24dp"
-                    android:gravity="center" />
-
                 <ImageButton
-                    android:id="@+id/addButton"
+                    android:id="@+id/logoutButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="@null"
-                    android:src="@drawable/ic_add"
-                    android:padding="8dp"
-                    android:layout_marginStart="12dp" />
+                    android:layout_gravity="center"
+                    android:layout_marginHorizontal="20dp"
+                    android:layout_marginVertical="20dp"
+                    android:layout_marginBottom="20dp"
+                    android:background="@drawable/logout_24px"
+                    android:scaleX="2"
+                    android:scaleY="2"
+                    android:textColor="@color/white" />
 
             </LinearLayout>
 
@@ -197,7 +189,8 @@
                                     android:textSize="12sp"
                                     android:textColor="#666666"
                                     android:background="@null"
-                                    android:inputType="textPersonName" />
+                                    android:inputType="textPersonName"
+                                    android:selectAllOnFocus="true"/>
 
                             </LinearLayout>
 
@@ -236,7 +229,8 @@
                                     android:textSize="12sp"
                                     android:textColor="#666666"
                                     android:background="@null"
-                                    android:inputType="textPersonName" />
+                                    android:inputType="textPersonName"
+                                    android:selectAllOnFocus="true"/>
 
                             </LinearLayout>
 
@@ -276,15 +270,16 @@
                                     android:textColor="#333333"
                                     android:layout_marginBottom="8dp" />
 
-                                <EditText
-                                    android:id="@+id/emailEditText"
+                                <TextView
+                                    android:id="@+id/emailTextView"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:hint="Enter email"
+                                    android:hint="email"
                                     android:textSize="12sp"
                                     android:textColor="#666666"
                                     android:background="@null"
-                                    android:inputType="textEmailAddress" />
+                                    android:inputType="textEmailAddress"
+                                    android:selectAllOnFocus="true"/>
 
                             </LinearLayout>
 
@@ -342,7 +337,7 @@
                         <androidx.cardview.widget.CardView
                             android:id="@+id/passwordCard"
                             android:layout_width="0dp"
-                            android:layout_height="100dp"
+                            android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:layout_marginEnd="6dp"
                             app:cardCornerRadius="16dp"
@@ -374,6 +369,7 @@
                                     android:layout_marginBottom="4dp" />
 
                                 <TextView
+                                    android:id="@+id/changePasswordTextView"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="Change"
@@ -387,7 +383,7 @@
                         <!-- Notifications Card -->
                         <androidx.cardview.widget.CardView
                             android:layout_width="0dp"
-                            android:layout_height="100dp"
+                            android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:layout_marginStart="6dp"
                             app:cardCornerRadius="16dp"
@@ -448,19 +444,6 @@
                             android:layout_height="wrap_content"
                             android:textColor="@color/white"
                             android:background="@drawable/save_24px"
-                            android:layout_marginBottom="20dp" />
-
-                        <ImageButton
-                            android:layout_gravity="center"
-                            android:layout_marginVertical="20dp"
-                            android:layout_marginHorizontal="20dp"
-                            android:scaleX="2"
-                            android:scaleY="2"
-                            android:id="@+id/logoutButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textColor="@color/white"
-                            android:background="@drawable/logout_24px"
                             android:layout_marginBottom="20dp" />
 
                     </LinearLayout>

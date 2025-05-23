@@ -16,6 +16,7 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import com.example.greenmeter.R
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -56,9 +57,15 @@ fun HomeScreen(navController: NavController) {
                 }
                 val displayName = view.findViewById<TextView>(R.id.displayName)
                 displayName.text = "${Firebase.auth.currentUser?.displayName}"
-                val profileButton = view.findViewById<ImageView>(R.id.profileButton)
-                val homeButton = view.findViewById<ImageView>(R.id.homeButton)
-                val analyticsButton = view.findViewById<ImageView>(R.id.analyticsButton)
+                val profileButton = view.findViewById<ImageButton>(R.id.profileButton)
+                val homeButton = view.findViewById<ImageButton>(R.id.homeButton)
+                val analyticsButton = view.findViewById<ImageButton>(R.id.analyticsButton)
+
+                profileButton.setOnClickListener {
+                    Log.d("HomeScreen", "Profile clicked")
+                    navController.navigate("profile")
+                }
+
                 view
             },
             modifier = Modifier.fillMaxSize()

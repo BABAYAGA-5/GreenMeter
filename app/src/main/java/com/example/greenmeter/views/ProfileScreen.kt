@@ -3,7 +3,6 @@ package com.example.greenmeter.views
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
@@ -17,7 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
 import com.example.greenmeter.R
-import com.example.greenmeter.backend.Authentification
+import com.example.greenmeter.backend.Userinfos
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
@@ -39,8 +38,8 @@ fun ProfileScreen (navController: NavController) {
                     ViewGroup.LayoutParams.MATCH_PARENT
                 )
                 val backButton = view.findViewById<ImageButton>(R.id.backButton)
-                val logoutButton = view.findViewById<Button>(R.id.logoutButton)
-                val saveChangesButton = view.findViewById<Button>(R.id.saveChangesButton)
+                val logoutButton = view.findViewById<ImageButton>(R.id.logoutButton)
+                val saveChangesButton = view.findViewById<ImageButton>(R.id.saveChangesButton)
                 backButton.setOnClickListener {
                     Log.d("Profile", "Back clicked")
                     navController.navigate("home")
@@ -50,6 +49,41 @@ fun ProfileScreen (navController: NavController) {
                     Log.d("Profile", "Logout clicked")
                     Firebase.auth.signOut()
                     navController.navigate("login")
+                }
+
+                val userinfos = Userinfos()
+                userinfos.getUserInfos(Firebase.auth.currentUser?.uid.toString()) { userData ->
+                    if (userData != null) {
+                        println("User data: $userData")
+                    } else {
+                        println("No user data found or an error occurred.")
+                    }
+
+                    val firstNameEditText = view.findViewById<EditText>(R.id.firstNameEditText)
+                    val lastNameEditText = view.findViewById<EditText>(R.id.lastNameEditText)
+                    val phoneEditText = view.findViewById<EditText>(R.id.phoneEditText)
+                    val emailTextView = view.findViewById<TextView>(R.id.emailTextView)
+                    val changePasswordTextView = view.findViewById<TextView>(R.id.changePasswordTextView)
+
+                    firstNameEditText.setText(userData?.get("firstName").toString())
+                    lastNameEditText.setText(userData?.get("lastName").toString())
+                    phoneEditText.setText(userData?.get("phoneNumber").toString())
+                    emailTextView.setText(Firebase.auth.currentUser?.email.toString())
+
+                    changePasswordTextView.setOnClickListener {
+                        Log.d("Profile", "Change Password clicked")
+                        navController.navigate("changepassword")
+                    }
+
+                    saveChangesButton.setOnClickListener {
+                        Log.d("Profile", "Save Changes clicked")
+                        val firstName = firstNameEditText.text.toString()
+                        val lastName = lastNameEditText.text.toString()
+                        val phoneNumber = phoneEditText.text.toString()
+
+                        userinfos.updateUserInfos(Firebase.auth.currentUser?.uid.toString(), firstName, lastName, phoneNumber)
+                    }
+
                 }
 
                 view

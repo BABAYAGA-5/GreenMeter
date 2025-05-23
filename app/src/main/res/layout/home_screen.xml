@@ -242,7 +242,6 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                 android:gravity="center">
 
                 <androidx.cardview.widget.CardView
-                    android:id="@+id/homeButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="25dp"
@@ -250,6 +249,7 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                     android:scaleY="2">
 
                     <ImageButton
+                        android:id="@+id/homeButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@color/card"
@@ -257,7 +257,6 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                 </androidx.cardview.widget.CardView>
 
                 <androidx.cardview.widget.CardView
-                    android:id="@+id/analyticsButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="25dp"
@@ -265,6 +264,7 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                     android:scaleY="2">
 
                     <ImageButton
+                        android:id="@+id/analyticsButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@color/card"
@@ -272,7 +272,6 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                 </androidx.cardview.widget.CardView>
 
                 <androidx.cardview.widget.CardView
-                    android:id="@+id/profileButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="25dp"
@@ -280,10 +279,11 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                     android:scaleY="2">
 
                     <ImageButton
+                        android:id="@+id/profileButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@color/card"
-                        android:src="@drawable/person_24px" />
+                        android:src="@drawable/person_24px"/>
                 </androidx.cardview.widget.CardView>
             </LinearLayout>
         </RelativeLayout>
