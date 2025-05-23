@@ -13,14 +13,27 @@ class Authentification
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val userMetadata = Firebase.auth.currentUser
-                    userMetadata!!.sendEmailVerification()
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
+                    userMetadata!!.updateProfile(
+                        com.google.firebase.auth.UserProfileChangeRequest.Builder()
+                            .setDisplayName("${user.firstName} ${user.lastName}")
+                            .build()
+                    ).addOnCompleteListener { profileTask ->
+                        if (profileTask.isSuccessful) {
+                            Log.d("SignUp", "Display name set successfully.")
+                        } else {
+                            Log.w("SignUp", "Failed to set display name: ${profileTask.exception?.message}")
+                        }
+                    }
+
+                    userMetadata.sendEmailVerification()
+                        .addOnCompleteListener { emailTask ->
+                            if (emailTask.isSuccessful) {
                                 Log.d("SignUp", "Email sent.")
                             } else {
-                                Log.w("SignUp", "Email verification failed: ${task.exception?.message}")
+                                Log.w("SignUp", "Email verification failed: ${emailTask.exception?.message}")
                             }
                         }
+
                     user.uid = userMetadata.uid
                     val db = Firebase.firestore
                     val userinfos = hashMapOf(

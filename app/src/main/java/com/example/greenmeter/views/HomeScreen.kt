@@ -13,7 +13,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
 import android.widget.Button
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.TextView
 import com.example.greenmeter.R
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 
 @Composable
 fun HomeScreen(navController: NavController) {
@@ -32,6 +37,25 @@ fun HomeScreen(navController: NavController) {
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
                 )
+                val logoutButton = view.findViewById<ImageButton>(R.id.logoutButton)
+                logoutButton.setOnClickListener {
+                    Log.d("HomeScreen", "Logout clicked")
+                    Firebase.auth.signOut()
+                    navController.navigate("login")
+                }
+                val greetingText = view.findViewById<TextView>(R.id.greetingText)
+                val datetime = view.findViewById<TextView>(R.id.datetime)
+                val curentdatetime = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(java.util.Date())
+                datetime.text = curentdatetime
+                val currenttime = java.text.SimpleDateFormat("HH:mm:ss").format(java.util.Date())
+                when (currenttime) {
+                    in "00:00:00".."06:00:00" -> greetingText.text = "Good Night"
+                    in "06:00:01".."12:00:00" -> greetingText.text = "Good Morning"
+                    in "12:00:01".."18:00:00" -> greetingText.text = "Good Afternoon"
+                    in "18:00:01".."23:59:59" -> greetingText.text = "Good Evening"
+                }
+                val displayName = view.findViewById<TextView>(R.id.displayName)
+                displayName.text = "${Firebase.auth.currentUser?.displayName}"
                 view
             },
             modifier = Modifier.fillMaxSize()
