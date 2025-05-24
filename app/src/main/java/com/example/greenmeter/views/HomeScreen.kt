@@ -115,7 +115,7 @@ fun HomeScreen(navController: NavController) {
                         textSize = 16f
                         gravity = android.view.Gravity.CENTER
                         setTextColor(ContextCompat.getColor(context, R.color.black))
-                        textSize = 30f
+                        textSize = 24f
 
                     }
 
@@ -149,6 +149,15 @@ fun HomeScreen(navController: NavController) {
                     devicesContainer.addView(cardView)
                     cardView.setOnClickListener {
                         Log.d("HomeScreen", "Card clicked for device: ${device?.deviceId}")
+                        if (device?.deviceId == "new") {
+                            Log.d("HomeScreen", "Adding new device")
+                            // Handle adding a new device
+                            navController.navigate("addDevice")
+                        } else {
+                            Log.d("HomeScreen", "Navigating to device details for: ${device?.deviceId}")
+                            // Handle navigating to device details
+                            navController.navigate("deviceDetails/${device?.deviceId}")
+                        }
                     }
                 }
 
@@ -175,7 +184,7 @@ fun HomeScreen(navController: NavController) {
                             addCard(device)
                         }
                         Log.d("Firebase", "Total devices found: ${devicesList.size}")
-                        val addDevice: Device = Device("", "New device", "add")
+                        val addDevice: Device = Device("new", "New device", "add")
                         addCard(addDevice)
                         /*val seeAllButton = Button(context).apply {
                             text = "See all"
