@@ -1,6 +1,8 @@
 package com.example.location
 
 import android.content.Context
+import android.os.Bundle
+import android.provider.Settings.Global.putString
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -152,11 +154,11 @@ fun HomeScreen(navController: NavController) {
                         if (device?.deviceId == "new") {
                             Log.d("HomeScreen", "Adding new device")
                             // Handle adding a new device
-                            navController.navigate("addDevice")
+                            navController.navigate("AddDevice")
                         } else {
                             Log.d("HomeScreen", "Navigating to device details for: ${device?.deviceId}")
                             // Handle navigating to device details
-                            navController.navigate("deviceDetails/${device?.deviceId}")
+                            navController.navigate("details/${device?.deviceId}") // Assuming you have a route for device details
                         }
                     }
                 }

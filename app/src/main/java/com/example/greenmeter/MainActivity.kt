@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.greenmeter.views.DeviceDetails
 import com.example.greenmeter.views.LogInScreen
 import com.example.greenmeter.views.ProfileScreen
 import com.example.location.HomeScreen
@@ -47,8 +48,13 @@ class MainActivity : AppCompatActivity() {
                 composable("profile") {
                     ProfileScreen(navController)
                 }
+                composable("details/{deviceId}") { backStackEntry ->
+                    val deviceId = backStackEntry.arguments?.getString("deviceId")
+                    if (deviceId != null) {
+                        DeviceDetails(deviceId, navController)
+                    }
+                }
             }
-
         }
     }
 }
