@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.greenmeter.views.AddDevice
+import com.example.greenmeter.views.AnalyticsScreen
 import com.example.greenmeter.views.DeviceDetails
 import com.example.greenmeter.views.LogInScreen
 import com.example.greenmeter.views.ProfileScreen
@@ -57,6 +58,10 @@ class MainActivity : AppCompatActivity() {
                 }
                 composable("AddDevice") {
                     AddDevice(navController)
+                }
+                composable("analytics")
+                {
+                    AnalyticsScreen(navController)
                 }
             }
         }

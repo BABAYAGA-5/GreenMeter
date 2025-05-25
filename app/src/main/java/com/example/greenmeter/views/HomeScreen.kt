@@ -166,53 +166,44 @@ fun HomeScreen(navController: NavController) {
                 val devicesList = mutableListOf<Device>()
                 val db = FirebaseDatabase.getInstance()
                 val userId = Firebase.auth.currentUser?.uid ?: ""
-                val userRef = db.getReference("users/$userId")
-                var snapshotexists: Boolean? = false
+                val devicesRef = db.getReference("devices")
 
                 Log.d("Firebase", "Fetching devices for user: $userId")
-                userRef.get().addOnSuccessListener { snapshot ->
+                devicesRef.get().addOnSuccessListener { snapshot ->
                     devicesList.clear()
-                    snapshotexists = snapshot.exists()
                     if (snapshot.exists()) {
-                        Log.d("Firebase", "User $userId exists, fetching devices")
+                        Log.d("Firebase", "Devices exist, filtering for user: $userId")
                         for (deviceSnap in snapshot.children) {
-                            val deviceId = deviceSnap.key ?: ""
-                            val deviceName = deviceSnap.child("deviceName").getValue(String::class.java) ?: "unknown"
-                            val deviceLogo = deviceSnap.child("deviceLogo").getValue(String::class.java) ?: "unknown"
-                            devicesList.add(Device(deviceId, deviceName, deviceLogo))
+                            val deviceUserId = deviceSnap.child("userId").getValue(String::class.java)
+                            if (deviceUserId == userId) {
+                                val deviceId = deviceSnap.key ?: ""
+                                val deviceName = deviceSnap.child("deviceName").getValue(String::class.java) ?: "unknown"
+                                val deviceLogo = deviceSnap.child("deviceLogo").getValue(String::class.java) ?: "unknown"
+                                devicesList.add(Device(deviceId, deviceName, deviceLogo))
+                                Log.d("Firebase", "Device found: ${deviceName} with ID: ${deviceId} and logo: ${deviceLogo}")
+                            }
                         }
+                        
+                        // Add all found devices to the UI
                         for (device in devicesList) {
-                            Log.d("Firebase", "Device found: ${device.deviceName} with ID: ${device.deviceId} and logo: ${device.deviceLogo}")
                             addCard(device)
                         }
-                        Log.d("Firebase", "Total devices found: ${devicesList.size}")
-                        val addDevice: Device = Device("new", "New device", "add")
+                        Log.d("Firebase", "Total devices found for user: ${devicesList.size}")
+                        
+                        // Add the "New device" card
+                        val addDevice = Device("new", "New device", "add")
                         addCard(addDevice)
-                        /*val seeAllButton = Button(context).apply {
-                            text = "See all"
-                            textSize = 16f
-                            setPadding(32, 16, 32, 16)
-                            layoutParams = LinearLayout.LayoutParams(
-                                LinearLayout.LayoutParams.WRAP_CONTENT,
-                                LinearLayout.LayoutParams.WRAP_CONTENT
-                            ).apply {
-                                gravity = Gravity.CENTER
-                                topMargin = 16
-                                bottomMargin = 32
-                            }
-                            setOnClickListener {
-                                Log.d("HomeScreen", "See all button clicked")
-                                // Handle click
-                            }
-                        }
-                        contentContainer.addView(seeAllButton)*/
-                    }
-                    else {
-                        Log.d("Firebase", "No devices found for user $userId")
-                        Log.d("Firebase", "Creating new user entry")
+                    } else {
+                        Log.d("Firebase", "No devices found in database")
+                        // Add just the "New device" card when no devices exist
+                        val addDevice = Device("new", "New device", "add")
+                        addCard(addDevice)
                     }
                 }.addOnFailureListener {
                     Log.e("Firebase", "Failed to get devices", it)
+                    // Add the "New device" card even on failure
+                    val addDevice = Device("new", "New device", "add")
+                    addCard(addDevice)
                 }
 
 
@@ -227,6 +218,11 @@ fun HomeScreen(navController: NavController) {
                 val profileButton = view.findViewById<ImageButton>(R.id.profileButton)
                 val homeButton = view.findViewById<ImageButton>(R.id.homeButton)
                 val analyticsButton = view.findViewById<ImageButton>(R.id.analyticsButton)
+
+                analyticsButton.setOnClickListener {
+                    Log.d("HomeScreen", "Analytics clicked")
+                    navController.navigate("analytics")
+                }
 
                 profileButton.setOnClickListener {
                     Log.d("HomeScreen", "Profile clicked")

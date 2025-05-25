@@ -40,6 +40,18 @@ import androidx.compose.ui.geometry.Size
 import com.example.greenmeter.R
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 // Data classes for your device structure
 data class Device(
@@ -47,7 +59,10 @@ data class Device(
     val deviceName: String = "",
     val livePower: Int = 0,
     val powerHistory: List<PowerReading> = emptyList(),
-    val monthlyEnergy: List<MonthlyEnergyData> = emptyList()
+    val monthlyEnergy: List<MonthlyEnergyData> = emptyList(),
+    val lightIntensity: Int = 0,
+    val lightMode: String = "manual", // Can be "manual", "auto"
+    val userId: String = ""
 )
 
 data class PowerReading(
@@ -133,26 +148,29 @@ fun getMonthLabelsForReadings(readings: List<MonthlyEnergyData>): List<String> {
 
 @Composable
 fun UsageGraph(readings: List<PowerReading>, modifier: Modifier = Modifier) {
+    if (readings.isEmpty()) {
+        Box(
+            modifier = modifier,
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Not enough data to display graph",
+                color = Color.White.copy(alpha = 0.7f),
+                fontSize = 14.sp
+            )
+        }
+        return
+    }
+
     val textMeasurer = rememberTextMeasurer()
     
-    // Use actual readings or fallback data
-    val actualReadings = if (readings.isNotEmpty()) readings else listOf(
-        PowerReading("", 100f, Date()),
-        PowerReading("", 120f, Date()),
-        PowerReading("", 180f, Date()),
-        PowerReading("", 100f, Date()),
-        PowerReading("", 80f, Date()),
-        PowerReading("", 90f, Date()),
-        PowerReading("", 150f, Date())
-    )
-
     // Extract values for Y-axis calculation
-    val dataPoints = actualReadings.map { it.value }
+    val dataPoints = readings.map { it.value }
     val minValue = dataPoints.minOrNull() ?: 0f
-    val maxValue = dataPoints.maxOrNull() ?: 250f
+    val maxValue = dataPoints.maxOrNull() ?: 0f
 
     // Add padding to min/max for better visualization
-    val padding = (maxValue - minValue) * 0.1f
+    val padding = if (maxValue > minValue) (maxValue - minValue) * 0.1f else maxValue * 0.1f
     val yAxisMin = (minValue - padding).coerceAtLeast(0f)
     val yAxisMax = maxValue + padding
 
@@ -215,7 +233,7 @@ fun UsageGraph(readings: List<PowerReading>, modifier: Modifier = Modifier) {
         }
 
         // Draw vertical grid lines
-        val numXTicks = actualReadings.size - 1
+        val numXTicks = readings.size - 1
         if (numXTicks > 0) {
             for (i in 0..numXTicks) {
                 val x = leftPadding + (graphWidth * i / numXTicks)
@@ -229,12 +247,12 @@ fun UsageGraph(readings: List<PowerReading>, modifier: Modifier = Modifier) {
         }
 
         // Draw the data line and points
-        if (actualReadings.isNotEmpty() && actualReadings.size > 1) {
+        if (readings.isNotEmpty() && readings.size > 1) {
             val path = Path()
-            val stepX = graphWidth / (actualReadings.size - 1)
+            val stepX = graphWidth / (readings.size - 1)
 
             // Create path for line
-            actualReadings.forEachIndexed { index, reading ->
+            readings.forEachIndexed { index, reading ->
                 val x = leftPadding + stepX * index
                 val normalizedValue = ((reading.value - yAxisMin) / yAxisRange).coerceIn(0f, 1f)
                 val y = height - bottomPadding - (normalizedValue * graphHeight)
@@ -277,7 +295,7 @@ fun UsageGraph(readings: List<PowerReading>, modifier: Modifier = Modifier) {
             )
 
             // Draw points and values
-            actualReadings.forEachIndexed { index, reading ->
+            readings.forEachIndexed { index, reading ->
                 val x = leftPadding + stepX * index
                 val normalizedValue = ((reading.value - yAxisMin) / yAxisRange).coerceIn(0f, 1f)
                 val y = height - bottomPadding - (normalizedValue * graphHeight)
@@ -336,23 +354,32 @@ fun UsageGraph(readings: List<PowerReading>, modifier: Modifier = Modifier) {
 
 @Composable
 fun MonthlyEnergyGraph(readings: List<MonthlyEnergyData>, modifier: Modifier = Modifier) {
+    if (readings.isEmpty()) {
+        Box(
+            modifier = modifier,
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Not enough data to display graph",
+                color = Color.White.copy(alpha = 0.7f),
+                fontSize = 14.sp
+            )
+        }
+        return
+    }
+
     val textMeasurer = rememberTextMeasurer()
     
-    // Use actual readings or fallback data
-    val actualReadings = if (readings.isNotEmpty()) readings else listOf(
-        MonthlyEnergyData("2024-01", 120f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-01")),
-        MonthlyEnergyData("2024-02", 150f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-02")),
-        MonthlyEnergyData("2024-03", 140f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-03")),
-        MonthlyEnergyData("2024-04", 160f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-04")),
-        MonthlyEnergyData("2024-05", 130f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-05")),
-        MonthlyEnergyData("2024-06", 145f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-06")),
-        MonthlyEnergyData("2024-07", 155f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-07")),
-        MonthlyEnergyData("2024-08", 165f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-08")),
-        MonthlyEnergyData("2024-09", 175f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-09")),
-        MonthlyEnergyData("2024-10", 170f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-10")),
-        MonthlyEnergyData("2024-11", 180f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-11")),
-        MonthlyEnergyData("2024-12", 190f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-12"))
-    )
+    // Extract values for Y-axis calculation
+    val dataPoints = readings.map { it.totalEnergy }
+    val minValue = dataPoints.minOrNull() ?: 0f
+    val maxValue = dataPoints.maxOrNull() ?: 0f
+
+    // Add padding to min/max for better visualization
+    val padding = if (maxValue > minValue) (maxValue - minValue) * 0.1f else maxValue * 0.1f
+    val yAxisMin = (minValue - padding).coerceAtLeast(0f)
+    val yAxisMax = maxValue + padding
+    val yAxisRange = yAxisMax - yAxisMin
 
     Canvas(modifier = modifier) {
         val width = size.width
@@ -364,12 +391,6 @@ fun MonthlyEnergyGraph(readings: List<MonthlyEnergyData>, modifier: Modifier = M
 
         val graphWidth = width - leftPadding - rightPadding
         val graphHeight = height - topPadding - bottomPadding
-
-        // Extract values and calculate ranges
-        val dataPoints = actualReadings.map { it.totalEnergy }
-        val minValue = 0f // Start from 0 for energy consumption
-        val maxValue = (dataPoints.maxOrNull() ?: 250f) * 1.1f // Add 10% padding
-        val yAxisRange = maxValue - minValue
 
         // Draw axes
         drawLine(
@@ -389,7 +410,7 @@ fun MonthlyEnergyGraph(readings: List<MonthlyEnergyData>, modifier: Modifier = M
         val numYTicks = 5
         for (i in 0..numYTicks) {
             val y = topPadding + (graphHeight * i / numYTicks)
-            val value = maxValue - (yAxisRange * i / numYTicks)
+            val value = yAxisMax - (yAxisRange * i / numYTicks)
 
             // Grid line
             drawLine(
@@ -472,11 +493,11 @@ fun MonthlyEnergyGraph(readings: List<MonthlyEnergyData>, modifier: Modifier = M
         }
 
         // Draw month labels with correct positioning
-        if (actualReadings.isNotEmpty()) {
+        if (readings.isNotEmpty()) {
             val dateFormat = SimpleDateFormat("MMM", Locale.getDefault())
-            val barSpacing = graphWidth / actualReadings.size
+            val barSpacing = graphWidth / readings.size
 
-            actualReadings.forEachIndexed { index, reading ->
+            readings.forEachIndexed { index, reading ->
                 val x = leftPadding + (index * barSpacing) + barSpacing / 2
                 val monthText = reading.date?.let { date ->
                     dateFormat.format(date)
@@ -509,7 +530,7 @@ fun DeviceDetails(deviceId: String, navController: NavController) {
         val userId = FirebaseAuth.getInstance().currentUser?.uid
         if (userId != null) {
             val database = FirebaseDatabase.getInstance()
-            val deviceRef = database.getReference("users").child(userId).child(deviceId)
+            val deviceRef = database.getReference("devices").child(deviceId)
             
             deviceRef.removeValue()
                 .addOnSuccessListener {
@@ -551,30 +572,32 @@ fun DeviceDetails(deviceId: String, navController: NavController) {
     val userId = currentUser?.uid
 
     // Use the Flow-based approach for cleaner Firebase integration
-    val deviceFlow = remember(deviceId, userId) {
+    val deviceFlow = remember(deviceId) {
         callbackFlow {
-            if (userId == null) {
-                trySend(null)
-                return@callbackFlow
-            }
-
             val database = FirebaseDatabase.getInstance()
-            // Updated path to match your Firebase structure: users/[userId]/[deviceId]
-            val deviceRef = database.getReference("users").child(userId).child(deviceId)
+            val deviceRef = database.getReference("devices").child(deviceId)
 
             val listener = object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     try {
-                        // Check if the snapshot exists
+                        // Check if the snapshot exists and belongs to the current user
                         if (!snapshot.exists()) {
                             trySend(null)
                             return
                         }
 
-                        // Get live power with proper null handling
+                        val deviceUserId = snapshot.child("userId").getValue(String::class.java)
+                        if (deviceUserId != userId) {
+                            trySend(null)
+                            return
+                        }
+
+                        // Get device data
                         val power = snapshot.child("livePower").getValue(Int::class.java) ?: 0
                         val deviceName = snapshot.child("deviceName").getValue(String::class.java) ?: "Unknown Device"
                         val deviceLogo = snapshot.child("deviceLogo").getValue(String::class.java) ?: ""
+                        val lightIntensity = snapshot.child("lightIntensity").getValue(Int::class.java) ?: 0
+                        val lightMode = snapshot.child("lightMode").getValue(String::class.java) ?: "manual"
 
                         // Get power history with proper parsing and date conversion
                         val powerHistory = mutableListOf<PowerReading>()
@@ -673,13 +696,15 @@ fun DeviceDetails(deviceId: String, navController: NavController) {
                             deviceName = deviceName,
                             livePower = power,
                             powerHistory = powerHistory,
-                            monthlyEnergy = monthlyEnergy
+                            monthlyEnergy = monthlyEnergy,
+                            lightIntensity = lightIntensity,
+                            lightMode = lightMode,
+                            userId = deviceUserId ?: ""
                         )
 
                         trySend(device)
 
                     } catch (e: Exception) {
-                        // Log the error and send null
                         println("Error parsing device data: ${e.message}")
                         trySend(null)
                     }
@@ -691,10 +716,8 @@ fun DeviceDetails(deviceId: String, navController: NavController) {
                 }
             }
 
-            // Add the listener
             deviceRef.addValueEventListener(listener)
 
-            // Cleanup when the flow is cancelled
             awaitClose {
                 deviceRef.removeEventListener(listener)
             }
@@ -750,7 +773,7 @@ fun DeviceDetails(deviceId: String, navController: NavController) {
                         fontSize = 16.sp
                     )
                     Text(
-                        text = "Path: users/$userId/$deviceId",
+                        text = "Path: devices/$deviceId",
                         color = Color.White.copy(alpha = 0.7f),
                         fontSize = 12.sp
                     )
@@ -760,173 +783,364 @@ fun DeviceDetails(deviceId: String, navController: NavController) {
 
         else -> {
             // Success state - show device data
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color(0xFF5A7A7A))
-                    .padding(16.dp)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Device Info Card
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Color.White.copy(alpha = 0.1f),
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
-                        )
-                        .padding(16.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                Color.White.copy(alpha = 0.1f),
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                            )
+                            .padding(16.dp)
                     ) {
-                        // Left side with logo and name
                         Row(
-                            verticalAlignment = Alignment.CenterVertically
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            // Device Logo
-                            val logoResId = when (device!!.deviceLogo) {
-                                "bedroom" -> R.drawable.bedroom
-                                "kitchen" -> R.drawable.kitchen
-                                "living_room" -> R.drawable.livingroom
-                                "bathroom" -> R.drawable.bathroom
-                                else -> R.drawable.question_mark
+                            // Left side with logo and name
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // Device Logo
+                                val logoResId = when (device!!.deviceLogo) {
+                                    "bedroom" -> R.drawable.bedroom
+                                    "kitchen" -> R.drawable.kitchen
+                                    "living_room" -> R.drawable.livingroom
+                                    "bathroom" -> R.drawable.bathroom
+                                    else -> R.drawable.question_mark
+                                }
+                                Image(
+                                    painter = painterResource(id = logoResId),
+                                    contentDescription = "Device Logo",
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .padding(end = 8.dp)
+                                )
+
+                                Text(
+                                    text = device!!.deviceName,
+                                    color = Color.White,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
-                            Image(
-                                painter = painterResource(id = logoResId),
-                                contentDescription = "Device Logo",
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .padding(end = 8.dp)
-                            )
 
-                            Text(
-                                text = device!!.deviceName,
-                                color = Color.White,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                            // Delete button
+                            IconButton(
+                                onClick = { showDeleteDialog = true }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete Device",
+                                    tint = Color.White.copy(alpha = 0.8f)
+                                )
+                            }
                         }
 
-                        // Delete button
-                        IconButton(
-                            onClick = { showDeleteDialog = true }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Delete Device",
-                                tint = Color.White.copy(alpha = 0.8f)
-                            )
-                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "Live Power: ${device!!.livePower} kWh",
+                            color = Color.White,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "Live Power: ${device!!.livePower} kWh",
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium
-                    )
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                // Light Control Section
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                Color.White.copy(alpha = 0.1f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Light Control",
+                            color = Color.White,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                        // Light Mode Buttons
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            val buttonModifier = Modifier.weight(1f).padding(horizontal = 4.dp)
+                            val selectedMode = device!!.lightMode
+                            
+                            OutlinedButton(
+                                onClick = {
+                                    val userId = FirebaseAuth.getInstance().currentUser?.uid
+                                    if (userId != null) {
+                                        val updates = hashMapOf<String, Any>(
+                                            "lightMode" to "manual",
+                                            "lightIntensity" to 255
+                                        )
+                                        FirebaseDatabase.getInstance()
+                                            .getReference("devices")
+                                            .child(deviceId)
+                                            .updateChildren(updates)
+                                    }
+                                },
+                                modifier = buttonModifier,
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = if (selectedMode == "manual") Color(0xFF4CAF50) else Color.Transparent,
+                                    contentColor = Color.White
+                                ),
+                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.5f))
+                            ) {
+                                Text("Max", fontSize = 14.sp)
+                            }
+
+                            OutlinedButton(
+                                onClick = {
+                                    val userId = FirebaseAuth.getInstance().currentUser?.uid
+                                    if (userId != null) {
+                                        val updates = hashMapOf<String, Any>(
+                                            "lightMode" to "manual",
+                                            "lightIntensity" to 0
+                                        )
+                                        FirebaseDatabase.getInstance()
+                                            .getReference("devices")
+                                            .child(deviceId)
+                                            .updateChildren(updates)
+                                    }
+                                },
+                                modifier = buttonModifier,
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = if (selectedMode == "manual") Color(0xFF4CAF50) else Color.Transparent,
+                                    contentColor = Color.White
+                                ),
+                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.5f))
+                            ) {
+                                Text("Min", fontSize = 14.sp)
+                            }
+
+                            OutlinedButton(
+                                onClick = {
+                                    val userId = FirebaseAuth.getInstance().currentUser?.uid
+                                    if (userId != null) {
+                                        FirebaseDatabase.getInstance()
+                                            .getReference("devices")
+                                            .child(deviceId)
+                                            .child("lightMode")
+                                            .setValue("auto")
+                                    }
+                                },
+                                modifier = buttonModifier,
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = if (selectedMode == "auto") Color(0xFF4CAF50) else Color.Transparent,
+                                    contentColor = Color.White
+                                ),
+                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.5f))
+                            ) {
+                                Text("Auto", fontSize = 14.sp)
+                            }
+                        }
+
+                        // Light Intensity Display
+                        Text(
+                            text = "Intensity: ${device!!.lightIntensity}",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        
+                        var sliderPosition by remember(device!!.lightIntensity) { 
+                            mutableStateOf(device!!.lightIntensity.toFloat()) 
+                        }
+                        
+                        // Enhanced Slider
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    Color.White.copy(alpha = 0.1f),
+                                    RoundedCornerShape(8.dp)
+                                )
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Slider(
+                                value = sliderPosition,
+                                onValueChange = { newValue ->
+                                    if (device!!.lightMode == "manual") {
+                                        sliderPosition = newValue
+                                        val intValue = newValue.toInt()
+                                        val userId = FirebaseAuth.getInstance().currentUser?.uid
+                                        if (userId != null) {
+                                            FirebaseDatabase.getInstance()
+                                                .getReference("devices")
+                                                .child(deviceId)
+                                                .child("lightIntensity")
+                                                .setValue(intValue)
+                                        }
+                                    }
+                                },
+                                valueRange = 0f..255f,
+                                steps = 254,
+                                enabled = device!!.lightMode == "manual",
+                                colors = SliderDefaults.colors(
+                                    thumbColor = Color(0xFF4CAF50),
+                                    activeTrackColor = Color(0xFF4CAF50),
+                                    inactiveTrackColor = Color.White.copy(alpha = 0.3f),
+                                    disabledThumbColor = Color.Gray,
+                                    disabledActiveTrackColor = Color.Gray,
+                                    disabledInactiveTrackColor = Color.Gray.copy(alpha = 0.3f)
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        // Mode Indicator
+                        Text(
+                            text = "Mode: ${if (device!!.lightMode == "auto") "Automatic" else "Manual"} Control",
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = 14.sp,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                }
 
                 // Power History Section
-                val lastSevenReadings = getLastSevenValues(device!!.powerHistory)
-                val averagePower = calculateAverageOfLastSeven(lastSevenReadings)
+                item {
+                    val lastSevenReadings = getLastSevenValues(device!!.powerHistory)
+                    val averagePower = calculateAverageOfLastSeven(lastSevenReadings)
 
-                // Power History Header with Average
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Power History",
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium
-                    )
                     Column(
-                        horizontalAlignment = Alignment.End
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                Color.White.copy(alpha = 0.1f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .padding(16.dp)
                     ) {
-                        Text(
-                            text = "7-Day Average",
-                            color = Color.White.copy(alpha = 0.8f),
-                            fontSize = 12.sp
-                        )
-                        Text(
-                            text = "${"%.1f".format(averagePower)} W",
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        // Power History Header with Average
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Power History",
+                                color = Color.White,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Column(
+                                horizontalAlignment = Alignment.End
+                            ) {
+                                Text(
+                                    text = "7-Day Average",
+                                    color = Color.White.copy(alpha = 0.8f),
+                                    fontSize = 12.sp
+                                )
+                                Text(
+                                    text = "${"%.1f".format(averagePower)} W",
+                                    color = Color.White,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Power History Graph
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(250.dp)
+                        ) {
+                            UsageGraph(
+                                readings = lastSevenReadings,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Power History Graph
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(250.dp)
-                ) {
-                    UsageGraph(
-                        readings = lastSevenReadings,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(32.dp))
 
                 // Monthly Energy Section
-                val lastTwelveMonths = getLastTwelveMonths(device!!.monthlyEnergy)
-                val averageMonthlyEnergy = calculateAverageMonthlyEnergy(lastTwelveMonths)
+                item {
+                    val lastTwelveMonths = getLastTwelveMonths(device!!.monthlyEnergy)
+                    val averageMonthlyEnergy = calculateAverageMonthlyEnergy(lastTwelveMonths)
 
-                // Monthly Energy Header with Average
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Monthly Energy",
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium
-                    )
                     Column(
-                        horizontalAlignment = Alignment.End
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                Color.White.copy(alpha = 0.1f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .padding(16.dp)
                     ) {
-                        Text(
-                            text = "Monthly Average",
-                            color = Color.White.copy(alpha = 0.8f),
-                            fontSize = 12.sp
-                        )
-                        Text(
-                            text = "${"%.1f".format(averageMonthlyEnergy)} kWh",
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        // Monthly Energy Header with Average
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Monthly Energy",
+                                color = Color.White,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Column(
+                                horizontalAlignment = Alignment.End
+                            ) {
+                                Text(
+                                    text = "Monthly Average",
+                                    color = Color.White.copy(alpha = 0.8f),
+                                    fontSize = 12.sp
+                                )
+                                Text(
+                                    text = "${"%.1f".format(averageMonthlyEnergy)} kWh",
+                                    color = Color.White,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Monthly Energy Graph
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(250.dp)
+                        ) {
+                            MonthlyEnergyGraph(
+                                readings = lastTwelveMonths,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Monthly Energy Graph
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(250.dp)
-                ) {
-                    MonthlyEnergyGraph(
-                        readings = lastTwelveMonths,
-                        modifier = Modifier.fillMaxSize()
-                    )
+                // Add some padding at the bottom
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
         }

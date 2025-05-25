@@ -157,23 +157,50 @@ fun AddDevice(navController: NavController) {
                 val userId = Firebase.auth.currentUser?.uid
                 if (userId != null) {
                     val database = FirebaseDatabase.getInstance()
-                    val deviceRef = database.getReference("users/$userId/$deviceId")
+                    val deviceRef = database.getReference("devices").child(deviceId)
                     
-                    val deviceData = mapOf(
-                        "deviceName" to deviceName,
-                        "deviceLogo" to selectedLogo
-                    )
+                    // Get the current device data first
+                    deviceRef.get().addOnSuccessListener { snapshot ->
+                        val currentData = if (snapshot.exists()) {
+                            snapshot.value as? Map<*, *> ?: mapOf<String, Any>()
+                        } else {
+                            mapOf<String, Any>()
+                        }
 
-                    deviceRef.setValue(deviceData)
-                        .addOnSuccessListener {
-                            Toast.makeText(context, "Device added successfully", Toast.LENGTH_SHORT).show()
-                            navController.navigate("home") {
-                                popUpTo("home") { inclusive = true }
+                        // Prepare the update data, preserving existing values if present
+                        val deviceData = mapOf(
+                            "deviceName" to deviceName,
+                            "deviceLogo" to selectedLogo,
+                            "userId" to userId,
+                            "livePower" to (currentData["livePower"] as? Int ?: 0),
+                            "lightIntensity" to (currentData["lightIntensity"] as? Int ?: 0),
+                            "lightMode" to (currentData["lightMode"] as? String ?: "manual"),
+                            "powerHistory" to (currentData["powerHistory"] as? Map<*, *> ?: mapOf<String, Int>()),
+                            "powerMonth" to (currentData["powerMonth"] as? Map<*, *> ?: mapOf<String, Int>())
+                        )
+
+                        // Update or create the device
+                        deviceRef.setValue(deviceData)
+                            .addOnSuccessListener {
+                                Toast.makeText(
+                                    context, 
+                                    if (snapshot.exists()) "Device updated successfully" else "Device added successfully", 
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                navController.navigate("home") {
+                                    popUpTo("home") { inclusive = true }
+                                }
                             }
-                        }
-                        .addOnFailureListener {
-                            Toast.makeText(context, "Failed to add device", Toast.LENGTH_SHORT).show()
-                        }
+                            .addOnFailureListener {
+                                Toast.makeText(
+                                    context, 
+                                    if (snapshot.exists()) "Failed to update device" else "Failed to add device", 
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                    }.addOnFailureListener {
+                        Toast.makeText(context, "Failed to access device data", Toast.LENGTH_SHORT).show()
+                    }
                 }
             },
             modifier = Modifier

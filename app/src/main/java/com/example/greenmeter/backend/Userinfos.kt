@@ -27,6 +27,7 @@ class Userinfos
         firstName: String,
         lastName: String,
         phoneNumber: String,
+        notificationsEnabled: Boolean = true
     ) {
         val db = Firebase.firestore
         val collectionName = "users"
@@ -34,6 +35,7 @@ class Userinfos
             "firstName" to firstName,
             "lastName" to lastName,
             "phoneNumber" to phoneNumber,
+            "notificationsEnabled" to notificationsEnabled
         )
         db.collection(collectionName).document(userId).set(userinfos)
             .addOnSuccessListener {

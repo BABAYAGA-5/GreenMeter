@@ -274,12 +274,8 @@
                                     android:id="@+id/emailTextView"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:hint="email"
                                     android:textSize="12sp"
-                                    android:textColor="#666666"
-                                    android:background="@null"
-                                    android:inputType="textEmailAddress"
-                                    android:selectAllOnFocus="true"/>
+                                    android:textColor="#666666" />
 
                             </LinearLayout>
 
@@ -326,82 +322,27 @@
 
                     </LinearLayout>
 
-                    <!-- Settings Cards Row 3 -->
-                    <LinearLayout
+                    <!-- Notifications Card -->
+                    <androidx.cardview.widget.CardView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginBottom="12dp"
+                        app:cardCornerRadius="16dp"
+                        app:cardElevation="0dp">
 
-                        <!-- Password Card -->
-                        <androidx.cardview.widget.CardView
-                            android:id="@+id/passwordCard"
-                            android:layout_width="0dp"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="6dp"
-                            app:cardCornerRadius="16dp"
-                            app:cardElevation="0dp"
-                            android:clickable="true"
-                            android:foreground="?android:attr/selectableItemBackground">
+                            android:orientation="horizontal"
+                            android:padding="16dp"
+                            android:gravity="center_vertical"
+                            android:background="#F5F5F5">
 
                             <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:orientation="vertical"
-                                android:padding="16dp"
-                                android:background="#F5F5F5"
-                                android:gravity="center">
-
-                                <ImageView
-                                    android:layout_width="24dp"
-                                    android:layout_height="24dp"
-                                    android:src="@drawable/key_24px"
-                                    android:layout_marginBottom="8dp" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Password"
-                                    android:textSize="14sp"
-                                    android:textStyle="bold"
-                                    android:textColor="#333333"
-                                    android:layout_marginBottom="4dp" />
-
-                                <TextView
-                                    android:id="@+id/changePasswordTextView"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Change"
-                                    android:textSize="11sp"
-                                    android:textColor="#4A6B7C" />
-
-                            </LinearLayout>
-
-                        </androidx.cardview.widget.CardView>
-
-                        <!-- Notifications Card -->
-                        <androidx.cardview.widget.CardView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="6dp"
-                            app:cardCornerRadius="16dp"
-                            app:cardElevation="0dp">
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:orientation="vertical"
-                                android:padding="16dp"
-                                android:background="#F5F5F5"
-                                android:gravity="center">
-
-                                <ImageView
-                                    android:layout_width="24dp"
-                                    android:layout_height="24dp"
-                                    android:src="@drawable/notifications_24px"
-                                    android:layout_marginBottom="8dp" />
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
 
                                 <TextView
                                     android:layout_width="wrap_content"
@@ -409,24 +350,79 @@
                                     android:text="Notifications"
                                     android:textSize="14sp"
                                     android:textStyle="bold"
-                                    android:textColor="#333333"
-                                    android:layout_marginBottom="4dp" />
+                                    android:textColor="#333333" />
 
-                                <Switch
-                                    android:id="@+id/notificationSwitch"
+                                <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:checked="true"
-                                    android:scaleX="0.8"
-                                    android:scaleY="0.8" />
+                                    android:text="Receive alerts about your energy consumption"
+                                    android:textSize="12sp"
+                                    android:textColor="#666666" />
 
                             </LinearLayout>
 
-                        </androidx.cardview.widget.CardView>
+                            <Switch
+                                android:id="@+id/notificationsSwitch"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:checked="true" />
 
-                    </LinearLayout>
+                        </LinearLayout>
 
-                    <!-- Save Button -->
+                    </androidx.cardview.widget.CardView>
+
+                    <!-- Password Change Card -->
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        app:cardCornerRadius="16dp"
+                        app:cardElevation="0dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:padding="16dp"
+                            android:gravity="center_vertical"
+                            android:background="#F5F5F5">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Password"
+                                    android:textSize="14sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#333333" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Send password reset email"
+                                    android:textSize="12sp"
+                                    android:textColor="#666666" />
+
+                            </LinearLayout>
+
+                            <Button
+                                android:id="@+id/changePasswordButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Reset"
+                                android:textColor="@color/white"
+                                android:backgroundTint="#4A6B7C" />
+
+                        </LinearLayout>
+
+                    </androidx.cardview.widget.CardView>
+
+                    <!-- Save Changes Button -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
