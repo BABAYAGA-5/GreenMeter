@@ -26,14 +26,14 @@ class Userinfos
         userId: String,
         firstName: String,
         lastName: String,
-        userData: String,
+        phoneNumber: String,
     ) {
         val db = Firebase.firestore
         val collectionName = "users"
         val userinfos = hashMapOf(
             "firstName" to firstName,
             "lastName" to lastName,
-            "userData" to userData
+            "phoneNumber" to phoneNumber,
         )
         db.collection(collectionName).document(userId).set(userinfos)
             .addOnSuccessListener {
