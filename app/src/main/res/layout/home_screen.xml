@@ -251,15 +251,6 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                     android:alignmentMode="alignMargins"
                     android:layout_gravity="center_horizontal" />
 
-                <Button
-                    android:id="@+id/seeAllDevicesButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:background="@drawable/rounded_button_bg"
-                    android:text="See All Devices"
-                    android:padding="10dp"
-                    android:layout_gravity="center_horizontal" />
             </LinearLayout>
 
 

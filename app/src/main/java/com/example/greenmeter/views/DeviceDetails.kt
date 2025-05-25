@@ -1,9 +1,14 @@
 package com.example.greenmeter.views
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,18 +28,37 @@ import kotlinx.coroutines.flow.callbackFlow
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.max
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.geometry.Size
+import com.example.greenmeter.R
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 
 // Data classes for your device structure
 data class Device(
     val deviceLogo: String = "",
     val deviceName: String = "",
     val livePower: Int = 0,
-    val powerHistory: List<PowerReading> = emptyList()
+    val powerHistory: List<PowerReading> = emptyList(),
+    val monthlyEnergy: List<MonthlyEnergyData> = emptyList()
 )
 
 data class PowerReading(
     val timestamp: String = "",
     val value: Float = 0f,
+    val date: Date? = null
+)
+
+data class MonthlyEnergyData(
+    val month: String = "", // Format: "YYYY-MM"
+    val totalEnergy: Float = 0f, // Total energy in kWh
     val date: Date? = null
 )
 
@@ -63,8 +87,54 @@ fun getTimeLabelsForReadings(readings: List<PowerReading>): List<String> {
     }
 }
 
+// Get the last 12 months of energy data
+fun getLastTwelveMonths(monthlyEnergy: List<MonthlyEnergyData>): List<MonthlyEnergyData> {
+    // Group by month and sum the values for each month
+    val monthlyMap = mutableMapOf<String, Pair<Float, Date?>>()
+    
+    monthlyEnergy.forEach { data ->
+        val monthKey = data.month // This is already in YYYY-MM format
+        val existingData = monthlyMap[monthKey]
+        if (existingData != null) {
+            // Sum the energy values for the same month
+            monthlyMap[monthKey] = Pair(
+                existingData.first + data.totalEnergy,
+                existingData.second ?: data.date
+            )
+        } else {
+            monthlyMap[monthKey] = Pair(data.totalEnergy, data.date)
+        }
+    }
+    
+    // Convert back to list and sort by date, then take last 12
+    return monthlyMap.map { (month, data) ->
+        MonthlyEnergyData(month, data.first, data.second)
+    }.sortedBy { it.date ?: Date(0) }.takeLast(12)
+}
+
+// Calculate average monthly energy consumption
+fun calculateAverageMonthlyEnergy(readings: List<MonthlyEnergyData>): Float {
+    return if (readings.isNotEmpty()) {
+        readings.map { it.totalEnergy }.average().toFloat()
+    } else {
+        0f
+    }
+}
+
+// Helper function to get month labels for the graph
+fun getMonthLabelsForReadings(readings: List<MonthlyEnergyData>): List<String> {
+    if (readings.isEmpty()) return emptyList()
+    
+    val dateFormat = SimpleDateFormat("MMM yyyy", Locale.getDefault())
+    return readings.map { reading ->
+        reading.date?.let { dateFormat.format(it) } ?: reading.month
+    }
+}
+
 @Composable
 fun UsageGraph(readings: List<PowerReading>, modifier: Modifier = Modifier) {
+    val textMeasurer = rememberTextMeasurer()
+    
     // Use actual readings or fallback data
     val actualReadings = if (readings.isNotEmpty()) readings else listOf(
         PowerReading("", 100f, Date()),
@@ -78,8 +148,6 @@ fun UsageGraph(readings: List<PowerReading>, modifier: Modifier = Modifier) {
 
     // Extract values for Y-axis calculation
     val dataPoints = actualReadings.map { it.value }
-
-    // Calculate proper Y-axis range
     val minValue = dataPoints.minOrNull() ?: 0f
     val maxValue = dataPoints.maxOrNull() ?: 250f
 
@@ -89,131 +157,395 @@ fun UsageGraph(readings: List<PowerReading>, modifier: Modifier = Modifier) {
     val yAxisMax = maxValue + padding
 
     Canvas(modifier = modifier) {
-        drawUsageGraphWithAxis(dataPoints, yAxisMin, yAxisMax)
-    }
-}
+        val width = size.width
+        val height = size.height
+        val leftPadding = 60f  // Space for Y-axis labels
+        val rightPadding = 20f
+        val topPadding = 40f   // Increased for value labels
+        val bottomPadding = 60f // Increased for day labels
 
-fun DrawScope.drawUsageGraphWithAxis(dataPoints: List<Float>, yAxisMin: Float, yAxisMax: Float) {
-    val width = size.width
-    val height = size.height
-    val leftPadding = 60f  // Space for Y-axis labels
-    val rightPadding = 20f
-    val topPadding = 20f
-    val bottomPadding = 40f
+        val graphWidth = width - leftPadding - rightPadding
+        val graphHeight = height - topPadding - bottomPadding
+        val yAxisRange = yAxisMax - yAxisMin
 
-    val graphWidth = width - leftPadding - rightPadding
-    val graphHeight = height - topPadding - bottomPadding
-    val yAxisRange = yAxisMax - yAxisMin
-
-    // Draw Y-axis line
-    drawLine(
-        color = Color.White.copy(alpha = 0.5f),
-        start = Offset(leftPadding, topPadding),
-        end = Offset(leftPadding, height - bottomPadding),
-        strokeWidth = 2f
-    )
-
-    // Draw X-axis line
-    drawLine(
-        color = Color.White.copy(alpha = 0.5f),
-        start = Offset(leftPadding, height - bottomPadding),
-        end = Offset(width - rightPadding, height - bottomPadding),
-        strokeWidth = 2f
-    )
-
-    // Draw horizontal grid lines and Y-axis labels
-    val numYTicks = 5
-    for (i in 0..numYTicks) {
-        val y = topPadding + (graphHeight * i / numYTicks)
-        val value = yAxisMax - (yAxisRange * i / numYTicks)
-
-        // Grid line
+        // Draw Y-axis line
         drawLine(
-            color = Color.White.copy(alpha = 0.2f),
-            start = Offset(leftPadding, y),
-            end = Offset(width - rightPadding, y),
-            strokeWidth = 1f
-        )
-
-        // Y-axis tick mark
-        drawLine(
-            color = Color.White.copy(alpha = 0.7f),
-            start = Offset(leftPadding - 5f, y),
-            end = Offset(leftPadding, y),
+            color = Color.White.copy(alpha = 0.5f),
+            start = Offset(leftPadding, topPadding),
+            end = Offset(leftPadding, height - bottomPadding),
             strokeWidth = 2f
         )
-    }
 
-    // Draw vertical grid lines
-    val numXTicks = dataPoints.size - 1
-    if (numXTicks > 0) {
-        for (i in 0..numXTicks) {
-            val x = leftPadding + (graphWidth * i / numXTicks)
+        // Draw X-axis line
+        drawLine(
+            color = Color.White.copy(alpha = 0.5f),
+            start = Offset(leftPadding, height - bottomPadding),
+            end = Offset(width - rightPadding, height - bottomPadding),
+            strokeWidth = 2f
+        )
+
+        // Draw horizontal grid lines and Y-axis labels
+        val numYTicks = 5
+        for (i in 0..numYTicks) {
+            val y = topPadding + (graphHeight * i / numYTicks)
+            val value = yAxisMax - (yAxisRange * i / numYTicks)
+
+            // Grid line
             drawLine(
-                color = Color.White.copy(alpha = 0.1f),
-                start = Offset(x, topPadding),
-                end = Offset(x, height - bottomPadding),
+                color = Color.White.copy(alpha = 0.2f),
+                start = Offset(leftPadding, y),
+                end = Offset(width - rightPadding, y),
                 strokeWidth = 1f
             )
+
+            // Y-axis label
+            val labelText = "${value.toInt()} kWh"
+            drawText(
+                textMeasurer = textMeasurer,
+                text = labelText,
+                style = TextStyle(
+                    color = Color.White,
+                    fontSize = 10.sp
+                ),
+                topLeft = Offset(
+                    x = leftPadding - 45f,
+                    y = y - 8f
+                )
+            )
         }
-    }
 
-    // Draw the data line and points
-    if (dataPoints.isNotEmpty() && dataPoints.size > 1) {
-        val path = Path()
-        val stepX = if (dataPoints.size > 1) graphWidth / (dataPoints.size - 1) else graphWidth
-
-        // Create path for line
-        dataPoints.forEachIndexed { index, value ->
-            val x = leftPadding + stepX * index
-            val normalizedValue = ((value - yAxisMin) / yAxisRange).coerceIn(0f, 1f)
-            val y = height - bottomPadding - (normalizedValue * graphHeight)
-
-            if (index == 0) {
-                path.moveTo(x, y)
-            } else {
-                path.lineTo(x, y)
+        // Draw vertical grid lines
+        val numXTicks = actualReadings.size - 1
+        if (numXTicks > 0) {
+            for (i in 0..numXTicks) {
+                val x = leftPadding + (graphWidth * i / numXTicks)
+                drawLine(
+                    color = Color.White.copy(alpha = 0.1f),
+                    start = Offset(x, topPadding),
+                    end = Offset(x, height - bottomPadding),
+                    strokeWidth = 1f
+                )
             }
         }
 
-        // Draw the line with gradient effect
-        drawPath(
-            path = path,
-            color = Color(0xFF4CAF50),
-            style = Stroke(width = 4f)
-        )
+        // Draw the data line and points
+        if (actualReadings.isNotEmpty() && actualReadings.size > 1) {
+            val path = Path()
+            val stepX = graphWidth / (actualReadings.size - 1)
 
-        // Draw points with values
-        dataPoints.forEachIndexed { index, value ->
-            val x = leftPadding + stepX * index
-            val normalizedValue = ((value - yAxisMin) / yAxisRange).coerceIn(0f, 1f)
-            val y = height - bottomPadding - (normalizedValue * graphHeight)
+            // Create path for line
+            actualReadings.forEachIndexed { index, reading ->
+                val x = leftPadding + stepX * index
+                val normalizedValue = ((reading.value - yAxisMin) / yAxisRange).coerceIn(0f, 1f)
+                val y = height - bottomPadding - (normalizedValue * graphHeight)
 
-            // Draw point
-            drawCircle(
+                if (index == 0) {
+                    path.moveTo(x, y)
+                } else {
+                    path.lineTo(x, y)
+                }
+            }
+
+            // Draw the line with gradient
+            drawPath(
+                path = path,
                 color = Color(0xFF4CAF50),
-                radius = 6f,
-                center = Offset(x, y)
+                style = Stroke(
+                    width = 4f,
+                    cap = StrokeCap.Round,
+                    join = StrokeJoin.Round
+                )
             )
 
-            // Draw inner point
-            drawCircle(
-                color = Color.White,
-                radius = 3f,
-                center = Offset(x, y)
+            // Add subtle gradient under the line
+            val fillPath = Path().apply {
+                addPath(path)
+                lineTo(width - rightPadding, height - bottomPadding)
+                lineTo(leftPadding, height - bottomPadding)
+                close()
+            }
+            drawPath(
+                path = fillPath,
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFF4CAF50).copy(alpha = 0.2f),
+                        Color(0xFF4CAF50).copy(alpha = 0.0f)
+                    ),
+                    startY = topPadding,
+                    endY = height - bottomPadding
+                )
             )
+
+            // Draw points and values
+            actualReadings.forEachIndexed { index, reading ->
+                val x = leftPadding + stepX * index
+                val normalizedValue = ((reading.value - yAxisMin) / yAxisRange).coerceIn(0f, 1f)
+                val y = height - bottomPadding - (normalizedValue * graphHeight)
+
+                // Draw point
+                drawCircle(
+                    color = Color(0xFF4CAF50),
+                    radius = 6f,
+                    center = Offset(x, y)
+                )
+
+                // Draw inner point
+                drawCircle(
+                    color = Color.White,
+                    radius = 3f,
+                    center = Offset(x, y)
+                )
+
+                // Draw value above point
+                val valueText = "${reading.value.toInt()} kWh"
+                val textWidth = textMeasurer.measure(valueText).size.width
+                drawText(
+                    textMeasurer = textMeasurer,
+                    text = valueText,
+                    style = TextStyle(
+                        color = Color.White,
+                        fontSize = 12.sp
+                    ),
+                    topLeft = Offset(
+                        x = x - textWidth / 2,
+                        y = y - 25f // Position above the point
+                    )
+                )
+
+                // Draw day of week below point
+                val dayText = reading.date?.let { date ->
+                    SimpleDateFormat("EEE", Locale.getDefault()).format(date)
+                } ?: ""
+                val dayWidth = textMeasurer.measure(dayText).size.width
+                drawText(
+                    textMeasurer = textMeasurer,
+                    text = dayText,
+                    style = TextStyle(
+                        color = Color.White,
+                        fontSize = 12.sp
+                    ),
+                    topLeft = Offset(
+                        x = x - dayWidth / 2,
+                        y = height - bottomPadding + 10f
+                    )
+                )
+            }
         }
     }
 }
 
-// Keep the old function for backward compatibility but make it use the new one
-fun DrawScope.drawUsageGraph(dataPoints: List<Float>, maxValue: Float) {
-    val minValue = dataPoints.minOrNull() ?: 0f
-    drawUsageGraphWithAxis(dataPoints, minValue, maxValue)
+@Composable
+fun MonthlyEnergyGraph(readings: List<MonthlyEnergyData>, modifier: Modifier = Modifier) {
+    val textMeasurer = rememberTextMeasurer()
+    
+    // Use actual readings or fallback data
+    val actualReadings = if (readings.isNotEmpty()) readings else listOf(
+        MonthlyEnergyData("2024-01", 120f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-01")),
+        MonthlyEnergyData("2024-02", 150f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-02")),
+        MonthlyEnergyData("2024-03", 140f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-03")),
+        MonthlyEnergyData("2024-04", 160f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-04")),
+        MonthlyEnergyData("2024-05", 130f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-05")),
+        MonthlyEnergyData("2024-06", 145f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-06")),
+        MonthlyEnergyData("2024-07", 155f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-07")),
+        MonthlyEnergyData("2024-08", 165f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-08")),
+        MonthlyEnergyData("2024-09", 175f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-09")),
+        MonthlyEnergyData("2024-10", 170f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-10")),
+        MonthlyEnergyData("2024-11", 180f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-11")),
+        MonthlyEnergyData("2024-12", 190f, SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse("2024-12"))
+    )
+
+    Canvas(modifier = modifier) {
+        val width = size.width
+        val height = size.height
+        val leftPadding = 60f  // Space for Y-axis labels
+        val rightPadding = 20f
+        val topPadding = 20f
+        val bottomPadding = 60f // Increased for month labels
+
+        val graphWidth = width - leftPadding - rightPadding
+        val graphHeight = height - topPadding - bottomPadding
+
+        // Extract values and calculate ranges
+        val dataPoints = actualReadings.map { it.totalEnergy }
+        val minValue = 0f // Start from 0 for energy consumption
+        val maxValue = (dataPoints.maxOrNull() ?: 250f) * 1.1f // Add 10% padding
+        val yAxisRange = maxValue - minValue
+
+        // Draw axes
+        drawLine(
+            color = Color.White.copy(alpha = 0.5f),
+            start = Offset(leftPadding, topPadding),
+            end = Offset(leftPadding, height - bottomPadding),
+            strokeWidth = 2f
+        )
+        drawLine(
+            color = Color.White.copy(alpha = 0.5f),
+            start = Offset(leftPadding, height - bottomPadding),
+            end = Offset(width - rightPadding, height - bottomPadding),
+            strokeWidth = 2f
+        )
+
+        // Draw horizontal grid lines and Y-axis labels
+        val numYTicks = 5
+        for (i in 0..numYTicks) {
+            val y = topPadding + (graphHeight * i / numYTicks)
+            val value = maxValue - (yAxisRange * i / numYTicks)
+
+            // Grid line
+            drawLine(
+                color = Color.White.copy(alpha = 0.2f),
+                start = Offset(leftPadding, y),
+                end = Offset(width - rightPadding, y),
+                strokeWidth = 1f
+            )
+
+            // Y-axis label
+            val labelText = "${value.toInt()} kWh"
+            drawText(
+                textMeasurer = textMeasurer,
+                text = labelText,
+                style = TextStyle(
+                    color = Color.White,
+                    fontSize = 10.sp
+                ),
+                topLeft = Offset(
+                    x = leftPadding - 45f,
+                    y = y - 8f
+                )
+            )
+        }
+
+        // Draw bars with gradient
+        if (dataPoints.isNotEmpty()) {
+            val barWidth = (graphWidth / dataPoints.size) * 0.6f
+            val barSpacing = graphWidth / dataPoints.size
+
+            dataPoints.forEachIndexed { index, value ->
+                val x = leftPadding + (index * barSpacing) + (barSpacing - barWidth) / 2
+                val normalizedValue = (value / maxValue).coerceIn(0f, 1f)
+                val barHeight = normalizedValue * graphHeight
+
+                // Draw bar with gradient
+                drawRect(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF4CAF50),
+                            Color(0xFF2E7D32)
+                        ),
+                        startY = height - bottomPadding - barHeight,
+                        endY = height - bottomPadding
+                    ),
+                    topLeft = Offset(
+                        x = x,
+                        y = height - bottomPadding - barHeight
+                    ),
+                    size = Size(
+                        width = barWidth,
+                        height = barHeight
+                    )
+                )
+
+                // Draw bar highlight
+                drawLine(
+                    color = Color.White.copy(alpha = 0.5f),
+                    start = Offset(x, height - bottomPadding - barHeight),
+                    end = Offset(x + barWidth, height - bottomPadding - barHeight),
+                    strokeWidth = 2f
+                )
+
+                // Draw value on top of the bar
+                val valueText = "${value.toInt()} kWh"
+                val textWidth = textMeasurer.measure(valueText).size.width
+                drawText(
+                    textMeasurer = textMeasurer,
+                    text = valueText,
+                    style = TextStyle(
+                        color = Color.White,
+                        fontSize = 12.sp
+                    ),
+                    topLeft = Offset(
+                        x = x + (barWidth - textWidth) / 2,
+                        y = height - bottomPadding - barHeight - 20f
+                    )
+                )
+            }
+        }
+
+        // Draw month labels with correct positioning
+        if (actualReadings.isNotEmpty()) {
+            val dateFormat = SimpleDateFormat("MMM", Locale.getDefault())
+            val barSpacing = graphWidth / actualReadings.size
+
+            actualReadings.forEachIndexed { index, reading ->
+                val x = leftPadding + (index * barSpacing) + barSpacing / 2
+                val monthText = reading.date?.let { date ->
+                    dateFormat.format(date)
+                } ?: reading.month.substring(5) // Extract month part from YYYY-MM
+
+                val textWidth = textMeasurer.measure(monthText).size.width
+                drawText(
+                    textMeasurer = textMeasurer,
+                    text = monthText,
+                    style = TextStyle(
+                        color = Color.White,
+                        fontSize = 10.sp
+                    ),
+                    topLeft = Offset(
+                        x = x - textWidth / 2,
+                        y = height - bottomPadding + 10f
+                    )
+                )
+            }
+        }
+    }
 }
 
 @Composable
 fun DeviceDetails(deviceId: String, navController: NavController) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    
+    // Function to delete device
+    fun deleteDevice() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        if (userId != null) {
+            val database = FirebaseDatabase.getInstance()
+            val deviceRef = database.getReference("users").child(userId).child(deviceId)
+            
+            deviceRef.removeValue()
+                .addOnSuccessListener {
+                    // Navigate back after successful deletion
+                    navController.popBackStack()
+                }
+                .addOnFailureListener { e ->
+                    // Handle error (you might want to show a toast or error message)
+                    println("Error deleting device: ${e.message}")
+                }
+        }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Device") },
+            text = { Text("Are you sure you want to delete this device? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        deleteDevice()
+                        showDeleteDialog = false
+                    }
+                ) {
+                    Text("Delete", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     // Get current user ID from Firebase Auth
     val currentUser = FirebaseAuth.getInstance().currentUser
     val userId = currentUser?.uid
@@ -292,14 +624,56 @@ fun DeviceDetails(deviceId: String, navController: NavController) {
                             }
                         }
 
-                        // Sort power history by date/timestamp
+                        // Get monthly energy data
+                        val monthlyEnergyMap = mutableMapOf<String, MutableList<Float>>()
+                        val monthlySnapshot = snapshot.child("powerMonth")
+
+                        if (monthlySnapshot.exists()) {
+                            monthlySnapshot.children.forEach { monthChild ->
+                                val monthKey = monthChild.key ?: "" // This will be in YYYY-MM format
+                                val value = when (val rawValue = monthChild.value) {
+                                    is Number -> rawValue.toFloat()
+                                    is String -> rawValue.toFloatOrNull() ?: 0f
+                                    else -> 0f
+                                }
+
+                                // Parse the month key directly as the date
+                                val date = try {
+                                    SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse(monthKey)
+                                } catch (e: Exception) {
+                                    println("Error parsing month key: $monthKey - ${e.message}")
+                                    null
+                                }
+
+                                // Add to monthly energy data
+                                if (!monthlyEnergyMap.containsKey(monthKey)) {
+                                    monthlyEnergyMap[monthKey] = mutableListOf()
+                                }
+                                monthlyEnergyMap[monthKey]?.add(value)
+                            }
+                        }
+
+                        // Convert grouped data to MonthlyEnergyData objects
+                        val monthlyEnergy = monthlyEnergyMap.map { (monthKey, values) ->
+                            val totalEnergy = values.sum()
+                            val date = try {
+                                SimpleDateFormat("yyyy-MM", Locale.getDefault()).parse(monthKey)
+                            } catch (e: Exception) {
+                                null
+                            }
+                            MonthlyEnergyData(monthKey, totalEnergy, date)
+                        }.toMutableList()
+
+                        // Sort power history and monthly energy by date
                         powerHistory.sortBy { it.date ?: Date(0) }
+                        monthlyEnergy.sortBy { it.date ?: Date(0) }
 
                         val device = Device(
                             deviceLogo = deviceLogo,
                             deviceName = deviceName,
                             livePower = power,
-                            powerHistory = powerHistory
+                            powerHistory = powerHistory,
+                            monthlyEnergy = monthlyEnergy
                         )
 
                         trySend(device)
@@ -402,25 +776,55 @@ fun DeviceDetails(deviceId: String, navController: NavController) {
                         )
                         .padding(16.dp)
                 ) {
-                    Text(
-                        text = "Device: ${device!!.deviceName}",
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // Left side with logo and name
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Device Logo
+                            val logoResId = when (device!!.deviceLogo) {
+                                "bedroom" -> R.drawable.bedroom
+                                "kitchen" -> R.drawable.kitchen
+                                "living_room" -> R.drawable.livingroom
+                                "bathroom" -> R.drawable.bathroom
+                                else -> R.drawable.question_mark
+                            }
+                            Image(
+                                painter = painterResource(id = logoResId),
+                                contentDescription = "Device Logo",
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .padding(end = 8.dp)
+                            )
 
-                    if (device!!.deviceLogo.isNotEmpty()) {
-                        Text(
-                            text = "Logo: ${device!!.deviceLogo}",
-                            color = Color.White.copy(alpha = 0.8f),
-                            fontSize = 14.sp
-                        )
+                            Text(
+                                text = device!!.deviceName,
+                                color = Color.White,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        // Delete button
+                        IconButton(
+                            onClick = { showDeleteDialog = true }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Delete Device",
+                                tint = Color.White.copy(alpha = 0.8f)
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "Live Power: ${device!!.livePower} W",
+                        text = "Live Power: ${device!!.livePower} kWh",
                         color = Color.White,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium
@@ -429,15 +833,9 @@ fun DeviceDetails(deviceId: String, navController: NavController) {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Get the last 7 values from the database
+                // Power History Section
                 val lastSevenReadings = getLastSevenValues(device!!.powerHistory)
                 val averagePower = calculateAverageOfLastSeven(lastSevenReadings)
-                val timeLabels = getTimeLabelsForReadings(lastSevenReadings)
-
-                // Calculate Y-axis values for display
-                val dataValues = lastSevenReadings.map { it.value }
-                val minValue = if (dataValues.any { it > 0 }) dataValues.filter { it > 0 }.minOrNull() ?: 0f else 0f
-                val maxValue = dataValues.maxOrNull() ?: 100f
 
                 // Power History Header with Average
                 Row(
@@ -446,7 +844,7 @@ fun DeviceDetails(deviceId: String, navController: NavController) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Power History (Last 7 Values)",
+                        text = "Power History",
                         color = Color.White,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium
@@ -470,86 +868,64 @@ fun DeviceDetails(deviceId: String, navController: NavController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Graph container with Y-axis labels
+                // Power History Graph
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(250.dp)
                 ) {
-                    // Y-axis labels (positioned on the left)
-                    Column(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .width(50.dp),
-                        verticalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        val yAxisRange = maxValue - minValue
-                        for (i in 5 downTo 0) {
-                            val value = minValue + (yAxisRange * i / 5)
-                            Text(
-                                text = "${value.toInt()}W",
-                                color = Color.White.copy(alpha = 0.8f),
-                                fontSize = 10.sp,
-                                modifier = Modifier.padding(end = 8.dp)
-                            )
-                        }
-                    }
-
-                    // Graph with last 7 values
                     UsageGraph(
                         readings = lastSevenReadings,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(start = 50.dp)
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(32.dp))
 
-                // Show time range for the last 7 values
-                if (lastSevenReadings.isNotEmpty()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                // Monthly Energy Section
+                val lastTwelveMonths = getLastTwelveMonths(device!!.monthlyEnergy)
+                val averageMonthlyEnergy = calculateAverageMonthlyEnergy(lastTwelveMonths)
+
+                // Monthly Energy Header with Average
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Monthly Energy",
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Column(
+                        horizontalAlignment = Alignment.End
                     ) {
                         Text(
-                            text = timeLabels.firstOrNull() ?: "",
-                            color = Color.White,
-                            fontSize = 10.sp
+                            text = "Monthly Average",
+                            color = Color.White.copy(alpha = 0.8f),
+                            fontSize = 12.sp
                         )
-                        if (timeLabels.size > 1) {
-                            Text(
-                                text = timeLabels.lastOrNull() ?: "",
-                                color = Color.White,
-                                fontSize = 10.sp
-                            )
-                        }
+                        Text(
+                            text = "${"%.1f".format(averageMonthlyEnergy)} kWh",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Enhanced debug info
-                Text(
-                    text = "Total readings: ${device!!.powerHistory.size} | Showing last 7 values | Average: ${"%.1f".format(averagePower)}W",
-                    color = Color.White.copy(alpha = 0.7f),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
-                )
-
-                // Show value range and actual data points
-                Text(
-                    text = "Value range: ${minValue.toInt()}-${maxValue.toInt()}W | Last 7 readings from database",
-                    color = Color.White.copy(alpha = 0.6f),
-                    fontSize = 11.sp
-                )
-
-                // Show the last 7 values for debugging
-                if (lastSevenReadings.isNotEmpty()) {
-                    Text(
-                        text = "Last 7 values: ${lastSevenReadings.map { "${it.value.toInt()}W" }.joinToString(", ")}",
-                        color = Color.White.copy(alpha = 0.5f),
-                        fontSize = 9.sp
+                // Monthly Energy Graph
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp)
+                ) {
+                    MonthlyEnergyGraph(
+                        readings = lastTwelveMonths,
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
             }
