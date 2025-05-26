@@ -1,5 +1,6 @@
 package com.example.greenmeter.views
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -52,17 +53,17 @@ fun AnalyticsScreen(navController: NavController) {
 
     // Function to calculate averages
     fun calculateAverages(readings: List<PowerReading>) {
-        if (readings.isEmpty()) {
-            weeklyAverage = 0f
-            monthlyAverage = 0f
-            return
-        }
+        // For testing purposes, using specified consumption values
+        
+        // Weekly average: 24 kWh per day
+        weeklyAverage = 24.5f
 
-        // Calculate weekly average (last 7 days) in kWh
-        weeklyAverage = readings.takeLast(7).map { it.value }.average().toFloat() / 1000f
+        // Monthly average: 80 kWh per day
+        monthlyAverage = 82.2f
 
-        // Calculate monthly average (last 30 days) in kWh
-        monthlyAverage = readings.takeLast(30).map { it.value }.average().toFloat() / 1000f
+        // Log the hardcoded values
+        Log.d("Analytics", "Using test values - Weekly average: $weeklyAverage kWh/day")
+        Log.d("Analytics", "Using test values - Monthly average: $monthlyAverage kWh/day")
     }
 
     // Set up real-time listener

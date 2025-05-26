@@ -104,11 +104,11 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                             android:gravity="center_vertical"
                             android:orientation="horizontal">
 
-
                             <TextView
+                                android:id="@+id/weatherStatus"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Cloudy"
+                                android:text="Loading..."
                                 android:textColor="#333333"
                                 android:textSize="18sp"
                                 android:textStyle="bold" />
@@ -120,7 +120,7 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Jakarta, Indonesia"
+                            android:text="Loading location..."
                             android:textColor="#666666"
                             android:textSize="14sp" />
                     </LinearLayout>
@@ -130,7 +130,7 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                         android:id="@+id/temperature"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="19°C"
+                        android:text="--°C"
                         android:textColor="#333333"
                         android:textSize="38sp"
                         android:textStyle="bold" />
@@ -159,10 +159,11 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                         android:orientation="vertical">
 
                         <TextView
+                            android:id="@+id/humidity"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="97 %"
+                            android:text="-- %"
                             android:textColor="#333333"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -184,10 +185,11 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                         android:orientation="vertical">
 
                         <TextView
+                            android:id="@+id/visibility"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="7 km"
+                            android:text="-- km"
                             android:textColor="#333333"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -209,18 +211,20 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
                         android:orientation="vertical">
 
                         <TextView
+                            android:id="@+id/windSpeed"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="3 km/h"
+                            android:text="-- km/h"
                             android:textColor="#333333"
                             android:textSize="16sp"
                             android:textStyle="bold" />
 
                         <TextView
+                            android:id="@+id/windDirection"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="NE Wind"
+                            android:text="-- Wind"
                             android:textColor="#666666"
                             android:textSize="12sp" />
                     </LinearLayout>
